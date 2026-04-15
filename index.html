@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
 
+<!-- META PIXEL -->
 <script>
 !function(f,b,e,v,n,t,s){
 if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -10,37 +11,50 @@ if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
 n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)
-}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
+}(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
 
 fbq('init', '799819532599997');
 fbq('track', 'PageView');
 </script>
 
+<!-- PINTEREST PIXEL -->
+<script>
+!function(e){
+if(!window.pintrk){
+window.pintrk = function () {
+window.pintrk.queue.push(Array.prototype.slice.call(arguments))};
+var n=window.pintrk;
+n.queue=[],n.version="3.0";
+var t=document.createElement("script");
+t.async=!0,t.src=e;
+var r=document.getElementsByTagName("script")[0];
+r.parentNode.insertBefore(t,r)}
+}("https://s.pinimg.com/ct/core.js");
+
+pintrk('load', '2613965302610');
+pintrk('page');
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Abrir Shopee</title>
 
 <style>
-body {
-  margin: 0;
-  height: 100vh;
-  background-color: #E74B2E;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: Arial;
+body{
+  margin:0;
+  height:100vh;
+  background:#E74B2E;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
-
-.botao {
-  background: white;
-  color: #E74B2E;
-  padding: 20px 60px;
-  font-size: 26px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-weight: bold;
-  cursor: pointer;
+.botao{
+  background:#fff;
+  color:#E74B2E;
+  padding:20px 60px;
+  font-size:26px;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
 }
 </style>
 
@@ -48,73 +62,218 @@ body {
 
 <body>
 
-<a href="#" id="btnShopee" class="botao">
-Abrir a Shopee
-</a>
+<div id="btnShopee" class="botao">Abrir a Shopee</div>
 
 <script>
 (function(){
 
-const LINK_SHOPEE = "https://s.shopee.com.br/4qBaEnyoyr";
-const API_URL = "https://shopee-utm-tracker.onrender.com";
-const UC = "N33lado";
+// ================= TRACK GLOBAL =================
+function track(e,d={}) {
+  fbq('trackCustom', e, d);
 
-document.getElementById("btnShopee").addEventListener("click", function(e){
-  e.preventDefault();
+  if (typeof pintrk !== "undefined") {
+    pintrk('track', e, d);
+  }
+}
 
-  const btn = this;
-  btn.innerText = "Redirecionando...";
+// ================= PARAMETROS =================
+const params=new URLSearchParams(window.location.search)
 
-  const rect = btn.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const largura = rect.width;
+let LINK=null,UC=null
 
-  let pos;
+const raw=params.get("dest")
 
-  // 🔥 LÓGICA ORIGINAL (centro 10%)
-  const inicioCentro = largura * 0.45;
-  const fimCentro = largura * 0.55;
+if(raw && raw.includes("|||")){
+  const p=raw.split("|||")
+  LINK=p[0]
+  UC=p[1]
+}else{
+  LINK=params.get("dest")
+  UC=params.get("uc")
+}
 
-  if (x < inicioCentro) {
-    pos = "Left";
-  } 
-  else if (x > fimCentro) {
-    pos = "Right";
-  } 
-  else {
-    pos = "Center";
+if(!LINK||!UC){
+  alert("Erro parâmetros")
+  throw new Error()
+}
+
+// ================= TEMPO =================
+let tempo=0,tempoLabel="S0"
+
+let tempoS0a1=false;
+let tempoS1a2=false;
+
+let evento01=false;
+let evento02=false;
+
+let clickRight=false;
+
+function checkEventos(){
+
+  if(clickRight && tempoS0a1 && !evento02){
+    track('EVENTO02');
+    evento02=true;
   }
 
-  // ============================
-  // 🔥 EVENTOS META (ADICIONADO)
-  // ============================
-
-  // Evento com parâmetro
-  fbq('trackCustom', 'ClickShopee', {
-    position: pos
-  });
-
-  // Eventos separados
-  if (pos === "Left") {
-    fbq('trackCustom', 'ClickShopee_Left');
-  } else if (pos === "Center") {
-    fbq('trackCustom', 'ClickShopee_Center');
-  } else {
-    fbq('trackCustom', 'ClickShopee_Right');
+  if(clickRight && tempoS1a2 && !evento01){
+    track('EVENTO01');
+    evento01=true;
   }
 
-  // ============================
-  // 🔥 FLUXO ORIGINAL (INALTERADO)
-  // ============================
+}
 
-  const link = encodeURIComponent(LINK_SHOPEE);
-  const finalURL = `${API_URL}/?link=${link}&pos=${pos}&uc=${UC}`;
+const tempoInterval=setInterval(()=>{
+  tempo++
 
-  console.log("POS:", pos);
-  console.log("REDIRECT:", finalURL);
+  if(tempo<=30){
+    tempoLabel="S"+(tempo-1)+"a"+tempo
+    track("Tempo_"+tempoLabel)
+  }else{
+    clearInterval(tempoInterval)
+  }
 
-  window.location.href = finalURL;
-});
+  if(tempoLabel==="S0a1"){
+    tempoS0a1=true;
+    checkEventos();
+  }
+
+  if(tempoLabel==="S1a2"){
+    tempoS1a2=true;
+    checkEventos();
+  }
+
+},1000)
+
+// ================= CLASSIFICAR =================
+function classificar(mbps){
+  if(mbps <= 0.5) return 1
+  if(mbps <= 0.8) return 2
+  if(mbps <= 1) return 3
+  if(mbps <= 2) return 4
+  if(mbps <= 4) return 5
+  if(mbps <= 6) return 6
+  if(mbps <= 10) return 7
+  if(mbps <= 15) return 8
+  if(mbps <= 20) return 9
+  if(mbps <= 30) return 11
+  if(mbps <= 40) return 12
+  if(mbps <= 50) return 13
+  if(mbps <= 60) return 14
+  return 15
+}
+
+// ================= VELOCIDADE =================
+let velocidade=null
+
+async function medirVelocidade(){
+  try{
+    const controller=new AbortController()
+    setTimeout(()=>controller.abort(),1000)
+
+    let totalBytes=0
+    const start=performance.now()
+
+    const res=await fetch("https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js",{
+      signal:controller.signal,
+      cache:"no-store"
+    })
+
+    const reader=res.body.getReader()
+
+    while(true){
+      const {done,value}=await reader.read()
+      if(done)break
+      totalBytes+=value.length
+    }
+
+    const duration=(performance.now()-start)/1000
+
+    if(totalBytes>0){
+      velocidade=(totalBytes*8/duration)/(1024*1024)
+
+      const nivel=classificar(velocidade)
+
+      track("Velocidade_N"+nivel)
+      track("VelocidadeInternet",{mbps:velocidade.toFixed(2),nivel})
+    }
+
+  }catch(e){
+    track("Velocidade_Erro")
+  }
+}
+
+medirVelocidade()
+
+// ================= CLIQUE =================
+document.getElementById("btnShopee").addEventListener("click",function(e){
+
+  const btn=this
+  btn.innerText="Redirecionando..."
+
+  const rect=btn.getBoundingClientRect()
+  const x=e.clientX - rect.left
+  const largura=rect.width
+
+  let pos
+
+  const inicioCentro=largura*0.45
+  const fimCentro=largura*0.55
+
+  if(x < inicioCentro){
+    pos="Left"
+  }else if(x > fimCentro){
+    pos="Right"
+  }else{
+    pos="Center"
+  }
+
+  // EVENTOS PIXEL
+  track('ClickShopee',{position:pos})
+
+  if(pos==="Left"){
+    track('ClickShopee_Left')
+  }else if(pos==="Center"){
+    track('ClickShopee_Center')
+  }else{
+    track('ClickShopee_Right')
+    clickRight = true;
+    checkEventos();
+  }
+
+  // EVENTOS DE CONVERSÃO
+  fbq('track', 'InitiateCheckout');
+
+  if (typeof pintrk !== "undefined") {
+    pintrk('track', 'checkout');
+  }
+
+  const tempoClick=tempoLabel
+
+  let tag
+  if(velocidade){
+    tag="N"+classificar(velocidade)
+  }else{
+    tag="N5"
+  }
+
+  const lado = pos === "Left" ? "L" : pos === "Right" ? "R" : "C"
+
+  const baseUC = UC.replace(/[^a-zA-Z0-9]/g,"")
+
+  const finalUC = (
+    baseUC +
+    "ClickShopee" + pos +
+    "i" +
+    tempoClick +
+    tag +
+    lado
+  ).replace(/[^a-zA-Z0-9]/g,"")
+
+  const url=`https://shopee-utm-tracker.onrender.com/?link=${encodeURIComponent(LINK)}&uc=${finalUC}`
+
+  window.location.href=url
+
+})
 
 })();
 </script>
