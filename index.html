@@ -68,11 +68,22 @@ body{
 (function(){
 
 // ================= TRACK GLOBAL =================
+let GLOBAL_IDS = {
+  external_id: '',
+  click_id: ''
+};
+
 function track(e,d={}) {
-  fbq('trackCustom', e, d);
+
+  const finalData = {
+    ...GLOBAL_IDS,
+    ...d
+  };
+
+  fbq('trackCustom', e, finalData);
 
   if (typeof pintrk !== "undefined") {
-    pintrk('track', e, d);
+    pintrk('track', e, finalData);
   }
 }
 
@@ -268,6 +279,10 @@ document.getElementById("btnShopee").addEventListener("click",function(e){
     tag +
     lado
   ).replace(/[^a-zA-Z0-9]/g,"")
+
+  // 🔥 AQUI DEFINE OS IDS
+  GLOBAL_IDS.external_id = finalUC;
+  GLOBAL_IDS.click_id = finalUC;
 
   const url=`https://shopee-utm-tracker.onrender.com/?link=${encodeURIComponent(LINK)}&uc=${finalUC}`
 
