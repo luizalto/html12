@@ -67,10 +67,28 @@ body{
 <script>
 (function(){
 
+// ================= GERAR ID =================
+function gerarId(tamanho = 15) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < tamanho; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// ================= PERSISTENCIA =================
+let storedId = localStorage.getItem('user_id');
+
+if (!storedId) {
+  storedId = gerarId(15);
+  localStorage.setItem('user_id', storedId);
+}
+
 // ================= TRACK GLOBAL =================
 let GLOBAL_IDS = {
-  external_id: '',
-  click_id: ''
+  external_id: storedId,
+  click_id: storedId
 };
 
 function track(e,d={}) {
@@ -239,14 +257,14 @@ document.getElementById("btnShopee").addEventListener("click",function(e){
   }
 
   // EVENTOS PIXEL
-  track('ClickShopee',{position:pos})
+  track('ClickShopee',{ position:pos, uc: UC })
 
   if(pos==="Left"){
-    track('ClickShopee_Left')
+    track('ClickShopee_Left',{ uc: UC })
   }else if(pos==="Center"){
-    track('ClickShopee_Center')
+    track('ClickShopee_Center',{ uc: UC })
   }else{
-    track('ClickShopee_Right')
+    track('ClickShopee_Right',{ uc: UC })
     clickRight = true;
     checkEventos();
   }
@@ -255,7 +273,7 @@ document.getElementById("btnShopee").addEventListener("click",function(e){
   fbq('track', 'InitiateCheckout');
 
   if (typeof pintrk !== "undefined") {
-    pintrk('track', 'checkout');
+    pintrk('track', 'checkout', { ...GLOBAL_IDS, uc: UC });
   }
 
   const tempoClick=tempoLabel
@@ -279,10 +297,6 @@ document.getElementById("btnShopee").addEventListener("click",function(e){
     tag +
     lado
   ).replace(/[^a-zA-Z0-9]/g,"")
-
-  // 🔥 AQUI DEFINE OS IDS
-  GLOBAL_IDS.external_id = finalUC;
-  GLOBAL_IDS.click_id = finalUC;
 
   const url=`https://shopee-utm-tracker.onrender.com/?link=${encodeURIComponent(LINK)}&uc=${finalUC}`
 
